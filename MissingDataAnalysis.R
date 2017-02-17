@@ -34,17 +34,29 @@ lbw_data$educage[lbw_data$educage == "Smaller"] = 2
 lbw_data$educage = as.numeric(lbw_data$educage)
 
 
+######################## Clean and prepare GCSE data for analysis #####################
+
+# values from 0 to 8
+GCSE_subset = GCSE_data[,c("sciencea", "mathstat", "english", "code")]
+
+# Remove obs in GCSE for wich all three grades (sciencea, english and mathstat) are missing
+GCSE_subset_clean = GCSE_subset[!is.na(GCSE_subset$sciencea) | !is.na(GCSE_subset$mathstat) | !is.na(GCSE_subset$english),]
+
+
 ################################ Merge datasets ####################################
 
 # Merge lbw data with bp data
 data_1_2 = merge(lbw_data,bp_data,by="code")
 
 # Merge lbw data with GCSE data
-data_1_3 = merge(lbw_data, GCSE_data, by="code")
+data_1_3 = merge(lbw_data, GCSE_subset_clean, by="code")
 
 # Merge all 3 datasets keeping only common obs
-total_data = merge(data_1_2,GCSE_data,by="code")
+data_1_2_3 = merge(data_1_2,GCSE_subset_clean,by="code")
 
+# If we don't use blood pressure measurements and height we use data_1_3
+# We loose 43 observations 
+total_data = data_1_3
 
 ############################### Summarize datasets ###############################
 
@@ -118,15 +130,5 @@ matrixplot(lbw_data, interactive = F, sortby = "matage")
 matrixplot(lbw_data, interactive = F, sortby = "ga")
 matrixplot(lbw_data, interactive = F, sortby = "mcig")
 matrixplot(lbw_data, interactive = F, sortby = "socstat")
-
-
-
-######################## Clean and prepare GCSE data for analysis #####################
-
-# values from 0 to 8
-GCSE_subset = GCSE_data[,c("sciencea", "mathstat", "english", "code")]
-
-# Remove obs in GCSE for wich all three grades (sciencea, english and mathstat) are missing
-GCSE_subset_clean = GCSE_subset[!is.na(GCSE_subset$sciencea) | !is.na(GCSE_subset$mathstat) | !is.na(GCSE_subset$english),]
 
 
