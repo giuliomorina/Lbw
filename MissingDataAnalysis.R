@@ -120,3 +120,13 @@ matrixplot(lbw_data, interactive = F, sortby = "mcig")
 matrixplot(lbw_data, interactive = F, sortby = "socstat")
 
 
+
+######################## Clean and prepare GCSE data for analysis #####################
+
+# values from 0 to 8
+GCSE_subset = GCSE_data[,c("sciencea", "mathstat", "english", "code")]
+
+# Remove obs in GCSE for wich all three grades (sciencea, english and mathstat) are missing
+GCSE_subset_clean = GCSE_subset[!is.na(GCSE_subset$sciencea) | !is.na(GCSE_subset$mathstat) | !is.na(GCSE_subset$english),]
+
+
