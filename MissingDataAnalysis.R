@@ -20,7 +20,7 @@ drops <- c("incf","incm")
 lbw_data = lbw_data[,!(names(lbw_data) %in% drops)]
 
 # Remove missing data in the response variable iqfull (MNAR - cannot do anything)
-lbw_data = lbw_data[!is.na(lbw_data$iqfull),]
+#lbw_data = lbw_data[!is.na(lbw_data$iqfull),]
 
 # Clean the variables educage and fed
 lbw_data$educage[lbw_data$educage == 99] = NA
@@ -32,6 +32,14 @@ lbw_data$educage[lbw_data$educage <= 16] = "Smaller"
 lbw_data$educage[lbw_data$educage == "Greater"] = 1
 lbw_data$educage[lbw_data$educage == "Smaller"] = 2
 lbw_data$educage = as.numeric(lbw_data$educage)
+
+#Convert to factors
+lbw_data$sex = factor(lbw_data$sex)
+lbw_data$fed = factor(lbw_data$fed)
+lbw_data$educage = factor(lbw_data$educage)
+lbw_data$benef = factor(lbw_data$benef)
+lbw_data$mcig = factor(lbw_data$mcig)
+lbw_data$socstat = factor(lbw_data$socstat)
 
 
 ######################## Clean and prepare GCSE data for analysis #####################
@@ -130,5 +138,8 @@ matrixplot(lbw_data, interactive = F, sortby = "matage")
 matrixplot(lbw_data, interactive = F, sortby = "ga")
 matrixplot(lbw_data, interactive = F, sortby = "mcig")
 matrixplot(lbw_data, interactive = F, sortby = "socstat")
+matrixplot(lbw_data, interactive = F, sortby = "educage")
 
+######### Correlation plots ###########
+pairs(lbw_data[,c(-2,-3,-4,-5,-6,-7)])
 

@@ -5,6 +5,7 @@ library("mice")
 library("Hmisc")
 library("hot.deck")
 
+rm(list=ls())
 source("MissingDataAnalysis.R")
 
 # Hot deck imputation base on Cranmer and Gill (2012) on lbw_data
@@ -16,12 +17,22 @@ source("MissingDataAnalysis.R")
 # lbw_missing_imputation = as.data.frame(hot_deck_imputation$data)
 
 # Verify which var are considered discrete. The cut off need to be 7 so that ga is considered contin.
-is.discrete(lbw_data, cutoff=7) 
+hot.deck::is.discrete(lbw_data, cutoff=7) 
 
 # Impute the categorical values using hot deck and the continuous using MI
 # Produce 5 datasets used to run 5 regressions
-lbw_hot_deck_imputation = hot.deck(lbw_data, m=5,  method = "p.draw", cutoff = 7, impContinuous = "mice", IDvars = c("code"))
+lbw_hot_deck_imputation = hot.deck(lbw_data, m=5,  method = "p.draw", cutoff = 7, impContinuous = "mice", 
+                                   IDvars = c("code","iqfull","iqverb","iqperf","rcomp","rrate","racc","tomifull"))
 lbwImputed = lbw_hot_deck_imputation$data
+
+#iqfull linear regression
+lm_list <- vector("list")
+for (i in 1:5) {
+  #Remove rows with missing iqfull
+  data <- lbwImputed[[i]][!is.na(lbwImputed[[i]]$iqfull),] 
+  lm_list[[i]] = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -bw -code,
+     data = data)
+}
 
 
 # Hot deck imputation base on Cranmer and Gill (2012) on GCSE_subset data
