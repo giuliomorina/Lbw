@@ -24,12 +24,13 @@ summary(lm_casewise_iqfull)
 plot(lm_casewise_iqfull) #Everything OK :D
 
 #Lasso regression
-fit_iqfull = glmnet(x=data.matrix(lbw_data_casewise[,c(-seq(1,7),-18)]), y=data.matrix(lbw_data_casewise[,1]),
-             family="gaussian", alpha=1, nlambda = 100)
+X <- model.matrix(as.formula(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code -1), data = lbw_data_casewise)
+X <- subset(X, select=-sex1) #remove sex1 -> I have no idea why it puts it
+Y <- as.matrix(lbw_data_casewise["iqfull"])
+fit_iqfull = glmnet(x=X, y=Y, family="gaussian", alpha=1, nlambda = 100)
 set.seed(17)
-cvfit_iqfull = cv.glmnet(x=data.matrix(lbw_data_casewise[,-seq(1,7)]), y=data.matrix(lbw_data_casewise[,1]),
-                  family="gaussian", alpha=1, lambda=fit_iqfull$lambda) 
-plot(cvfit)
+cvfit_iqfull = cv.glmnet(x=X, y=Y,family="gaussian", alpha=1, lambda=fit_iqfull$lambda) 
+plot(cvfit_iqfull)
 lambdaMin_fit_iqfull = as.matrix(coef(fit_iqfull, s=cvfit_iqfull$lambda.min))
 #coef(fit, s=cvfit$lambda.min)
 #coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
@@ -56,12 +57,13 @@ summary(lm_casewise_iqverb)
 
 
 #Lasso regression
-fit_iqverb = glmnet(x=data.matrix(lbw_data_casewise[,c(-seq(1,7),-18)]), y=data.matrix(lbw_data_casewise[,2]),
+Y <- as.matrix(lbw_data_casewise["iqverb"])
+fit_iqverb = glmnet(x=X, y=Y,
              family="gaussian", alpha=1, nlambda = 100)
 set.seed(17)
-cvfit_iqverb = cv.glmnet(x=data.matrix(lbw_data_casewise[,-seq(1,7)]), y=data.matrix(lbw_data_casewise[,2]),
+cvfit_iqverb = cv.glmnet(x=X, y=Y,
                   family="gaussian", alpha=1, lambda=fit_iqverb$lambda) 
-plot(cvfit)
+plot(cvfit_iqverb)
 lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
 #coef(fit, s=cvfit$lambda.min)
 #coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
@@ -88,12 +90,13 @@ summary(lm_casewise_iqperf)
 
 
 #Lasso regression
-fit_iqperf = glmnet(x=data.matrix(lbw_data_casewise[,c(-seq(1,7),-18)]), y=data.matrix(lbw_data_casewise[,3]),
+Y <- as.matrix(lbw_data_casewise["iqperf"])
+fit_iqperf = glmnet(x=X, y=Y,
                     family="gaussian", alpha=1, nlambda = 100)
 set.seed(17)
-cvfit_iqperf = cv.glmnet(x=data.matrix(lbw_data_casewise[,-seq(1,7)]), y=data.matrix(lbw_data_casewise[,3]),
+cvfit_iqperf = cv.glmnet(x=X, y=Y,
                          family="gaussian", alpha=1, lambda=fit_iqperf$lambda) 
-plot(cvfit)
+plot(cvfit_iqperf)
 lambdaMin_fit_iqperf = as.matrix(coef(fit_iqperf, s=cvfit_iqperf$lambda.min))
 
 
@@ -109,12 +112,13 @@ summary(lm_casewise_tomifull)
 
 
 #Lasso regression
-fit_tomi = glmnet(x=data.matrix(lbw_data_casewise[,c(-seq(1,7),-18)]), y=data.matrix(lbw_data_casewise[,7]),
+Y <- as.matrix(lbw_data_casewise["tomifull"])
+fit_tomi = glmnet(x=X, y=Y,
                     family="gaussian", alpha=1, nlambda = 100)
 set.seed(17)
-cvfit_tomi = cv.glmnet(x=data.matrix(lbw_data_casewise[,-seq(1,7)]), y=data.matrix(lbw_data_casewise[,7]),
+cvfit_tomi = cv.glmnet(x=X, y=Y,
                          family="gaussian", alpha=1, lambda=fit_tomi$lambda) 
-plot(cvfit)
+plot(cvfit_tomi)
 lambdaMin_fit_tomi = as.matrix(coef(fit_tomi, s=cvfit_tomi$lambda.min))
 
 
