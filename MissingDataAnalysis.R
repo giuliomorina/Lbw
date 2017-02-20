@@ -4,6 +4,7 @@ library("Amelia")
 library("mice")
 library("Hmisc")
 library("hot.deck")
+library("BaylorEdPsych")
 
 ############################ Import the 3 datasets #################################
 
@@ -142,4 +143,10 @@ matrixplot(lbw_data, interactive = F, sortby = "educage")
 
 ######### Correlation plots ###########
 pairs(lbw_data[,c(-2,-3,-4,-5,-6,-7)])
+
+######### Test for data MCAR ###########
+# The null hp is data MCAR - pvalue small, null hp rejected
+# Data not completely at random
+LittleMCAR(lbw_data) 
+
 

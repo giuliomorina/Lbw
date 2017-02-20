@@ -24,7 +24,9 @@ paper_data$mcig[is.na(paper_data$mcig)] = 3
 levels(paper_data$socstat) <- c(levels(paper_data$socstat),3) 
 paper_data$socstat[is.na(paper_data$socstat)] = 3
 
-#IQFULL
+##########
+#IQ FULL  
+##########
 
 #Remove rows where iqfull is missing
 paper_data_iqfull <- paper_data[!is.na(paper_data$iqfull),]
