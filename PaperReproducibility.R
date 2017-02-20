@@ -12,7 +12,7 @@ paper_data = lbw_data #initialization
 paper_data$benef = as.numeric(paper_data$benef)
 paper_data$benef[paper_data$benef>1] = 2
 paper_data$benef = factor(paper_data$benef, ordered = FALSE)
-#Create missing category
+#Create missing category as an additional level in the factor variable
 levels(paper_data$benef) <- c(levels(paper_data$benef),3) 
 paper_data$benef[is.na(paper_data$benef)] = 3
 levels(paper_data$educage) <- c(levels(paper_data$educage),3) 
@@ -24,79 +24,242 @@ paper_data$mcig[is.na(paper_data$mcig)] = 3
 levels(paper_data$socstat) <- c(levels(paper_data$socstat),3) 
 paper_data$socstat[is.na(paper_data$socstat)] = 3
 
-##########
-#IQ FULL  
-##########
+
+
+###################################################################
+########################## IQ FULL ################################
+###################################################################
+
 
 #Remove rows where iqfull is missing
 paper_data_iqfull <- paper_data[!is.na(paper_data$iqfull),]
 
 #Linear regression (check if it works)
-lm_casewise = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
+lm_casewise_iqfull = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
                  data = paper_data_iqfull)
-summary(lm_casewise)
+summary(lm_casewise_iqfull)
 
 #Best subset
-fit_subset = regsubsets(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
+fit_subset_iqfull = regsubsets(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
                         data = paper_data_iqfull, method = "exhaustive", nvmax = 20)
-fit_subset_summary = summary(fit_subset)
+fit_subset_iqfull_summary = summary(fit_subset_iqfull)
 
-fit_subset_summary$cp
-plot(fit_subset,scale="Cp")
+fit_subset_iqfull_summary$cp
+plot(fit_subset_iqfull,scale="Cp")
 
-lm_subset = lm(iqfull ~ rbw+ga+educage+benef,
+lm_subset_iqfull = lm(iqfull ~ rbw+ga+educage+benef,
                  data = paper_data_iqfull)
-summary(lm_subset)
+summary(lm_subset_iqfull)
 
-##########
-#IQ VERBAL
-##########
+#Lasso regression
+X <- model.matrix(as.formula(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code -1), data = paper_data_iqfull)
+X <- subset(X, select=-sex1) #remove sex1 -> I have no idea why it puts it
+Y <- as.matrix(paper_data_iqfull["iqfull"])
+fit_iqfull = glmnet(x=X, y=Y, family="gaussian", alpha=1, nlambda = 100)
+set.seed(17)
+cvfit_iqfull = cv.glmnet(x=X, y=Y,family="gaussian", alpha=1, lambda=fit_iqfull$lambda) 
+plot(cvfit_iqfull)
+lambdaMin_fit_iqfull = as.matrix(coef(fit_iqfull, s=cvfit_iqfull$lambda.min))
+#coef(fit, s=cvfit$lambda.min)
+#coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
+
+#Linear regression with selected vars from LASSO
+socstat_new = paper_data_iqfull$socstat
+socstat_new[socstat_new != 4 & socstat_new != 5]= 1 #Now socstat is 1 if < 4 
+socstat_new = factor(socstat_new)
+
+lbw_data_casewise_LASSO_iqfull = cbind(paper_data_iqfull, socstat_new)
+lm_casewise_iqfull_LASSO = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -socstat -mcig -code,
+                              data = lbw_data_casewise_LASSO_iqfull)
+summary(lm_casewise_iqfull_LASSO)
+
+
+
+###################################################################
+########################## IQ VERB ################################
+###################################################################
 
 #Remove rows where iqverb is missing
 paper_data_iqverb <- paper_data[!is.na(paper_data$iqverb),]
 
+#Linear regression (check if it works)
+lm_casewise_iqverb = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
+                        data = paper_data_iqverb)
+summary(lm_casewise_iqverb)
+
 #Best subset
 fit_subset_iqverb = regsubsets(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
                         data = paper_data_iqverb, method = "exhaustive", nvmax = 20)
-fit_subset_summary_iqverb = summary(fit_subset_iqverb)
+fit_subset_iqverb_summary = summary(fit_subset_iqverb)
 
-fit_subset_summary_iqverb$cp
+fit_subset_iqverb_summary$cp
 plot(fit_subset_iqverb,scale="Cp")
-lm_subset_iqverb = lm(iqverb ~ rbw+ga+educage+benef,
+lm_subset_iqverb = lm(iqverb ~ rbw+ga+educage+benef+matage,
                data = paper_data_iqverb)
 summary(lm_subset_iqverb)
 
-##############
-#IQPerformance
-###############
+#Lasso regression
+X <- model.matrix(as.formula(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code -1), data = paper_data_iqverb)
+X <- subset(X, select=-sex1)
+Y <- as.matrix(paper_data_iqverb["iqverb"])
+fit_iqverb = glmnet(x=X, y=Y, family="gaussian", alpha=1, nlambda = 100)
+set.seed(17)
+cvfit_iqverb = cv.glmnet(x=X, y=Y, family="gaussian", alpha=1, lambda=fit_iqverb$lambda) 
+plot(cvfit_iqverb)
+lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
+#coef(fit, s=cvfit$lambda.min)
+#coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
+
+
+#Linear regression with selected vars from LASSO
+lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -bw -code,
+                              data = lbw_data_casewise)
+summary(lm_casewise_iqverb_LASSO)
+
+
+###################################################################
+########################## IQ PERF ################################
+###################################################################
+
 #Remove rows where iqfull is missing
 paper_data_iqperf <- paper_data[!is.na(paper_data$iqperf),]
+
+
+#Linear regression (check if it works)
+lm_casewise_iqperf = lm(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
+                        data = paper_data_iqperf)
+summary(lm_casewise_iqperf)
 
 #Best subset
 fit_subset_iqperf = regsubsets(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
                                data = paper_data_iqperf, method = "exhaustive", nvmax = 20)
-fit_subset_summary_iqperf = summary(fit_subset_iqperf)
+fit_subset_iqperf_summary = summary(fit_subset_iqperf)
 
-fit_subset_summary_iqperf$cp
+fit_subset_iqperf_summary$cp
 plot(fit_subset_iqperf,scale="Cp")
 lm_subset_iqperf = lm(iqperf ~ rbw+educage+benef,
                       data = paper_data_iqperf)
 summary(lm_subset_iqperf)
 
-###########
-#Tomifull
-###########
+#Lasso regression
+X <- model.matrix(as.formula(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code -1), data = paper_data_iqperf)
+X <- subset(X, select=-sex1)
+Y <- as.matrix(paper_data_iqperf["iqperf"])
+fit_iqperf = glmnet(x=X, y=Y,
+                    family="gaussian", alpha=1, nlambda = 100)
+set.seed(17)
+cvfit_iqperf = cv.glmnet(x=X, y=Y,
+                         family="gaussian", alpha=1, lambda=fit_iqperf$lambda) 
+plot(cvfit_iqperf)
+lambdaMin_fit_iqperf = as.matrix(coef(fit_iqperf, s=cvfit_iqperf$lambda.min))
+
+
+###################################################################
+########################## TOMIFULL ###############################
+###################################################################
+
 
 #Remove rows where iqfull is missing
 paper_data_tomifull <- paper_data[!is.na(paper_data$tomifull),]
 
+
+#Linear regression (check if it works)
+lm_casewise_tomifull = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -code,
+                        data = paper_data_tomifull)
+summary(lm_casewise_tomifull)
+
 #Best subset
 fit_subset_tomifull = regsubsets(tomifull ~ . -iqfull -iqverb -rcomp -rrate -racc -iqperf -code,
                                data = paper_data_tomifull, method = "exhaustive", nvmax = 20)
-fit_subset_summary_tomifull = summary(fit_subset_tomifull)
+fit_subset_tomifull_summary = summary(fit_subset_tomifull)
 
-fit_subset_summary_tomifull$cp
+fit_subset_tomifull_summary$cp
 plot(fit_subset_tomifull,scale="Cp")
-lm_subset_tomifull = lm(tomifull ~ bw+rbw+educage+benef+mcig,
+lm_subset_tomifull = lm(tomifull ~ bw+rbw+ga+educage+benef+mcig, #only educage missing and benef missing are included
                       data = paper_data_tomifull)
 summary(lm_subset_tomifull)
+
+#Lasso regression
+X <- model.matrix(as.formula(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -code -1), data = paper_data_tomifull)
+X <- subset(X, select=-sex1)
+Y <- as.matrix(paper_data_tomifull["tomifull"])
+fit_tomi = glmnet(x=X, y=Y,
+                  family="gaussian", alpha=1, nlambda = 100)
+set.seed(17)
+cvfit_tomi = cv.glmnet(x=X, y=Y,
+                       family="gaussian", alpha=1, lambda=fit_tomi$lambda) 
+plot(cvfit_tomi)
+lambdaMin_fit_tomi = as.matrix(coef(fit_tomi, s=cvfit_tomi$lambda.min))
+
+
+
+###################################################################
+################### Tables for report #############################
+###################################################################
+
+# Table for liner regression with casewise delection
+stargazer(lm_casewise_iqfull, 
+          lm_casewise_iqverb, 
+          lm_casewise_iqperf, 
+          lm_casewise_tomifull, 
+          type = "latex", 
+          dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
+          dep.var.caption = "",
+          covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
+                               "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+                               "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+                               "4 social benefits", "Mother age",
+                               "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+                               "Socio economic status 2",
+                               "Socio economic status 3",
+                               "Socio economic status 4",
+                               "Socio economic status 5"),
+          ci = FALSE,
+          title = "Linear regression with NA indicators",
+          single.row = FALSE, 
+          report = "vc*",
+          no.space = TRUE,
+          omit.stat=c("f", "ser"))
+
+
+# Table for liner regression with subset selection
+stargazer(lm_subset_iqfull, 
+          lm_subset_iqverb, 
+          lm_subset_iqperf, 
+          lm_subset_tomifull, 
+          type = "latex", 
+          dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
+          dep.var.caption = "",
+          covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
+                               "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+                               "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+                               "4 social benefits", "Mother age",
+                               "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+                               "Socio economic status 2",
+                               "Socio economic status 3",
+                               "Socio economic status 4",
+                               "Socio economic status 5"),
+          ci = FALSE,
+          title = "Linear regression with subset selection and NA indicators",
+          single.row = FALSE, 
+          report = "vc*",
+          no.space = TRUE,
+          omit.stat=c("f", "ser"))
+
+
+# Table for LASSO with NA indicators
+lasso_results = cbind(lambdaMin_fit_iqfull, 
+                      lambdaMin_fit_iqverb, 
+                      lambdaMin_fit_iqperf, 
+                      lambdaMin_fit_tomi)
+stargazer(lasso_results,
+          type = "latex", 
+          dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
+          dep.var.caption = "",
+          ci = FALSE,
+          title = "LASSO with NA indicators",
+          single.row = FALSE, 
+          report = "vc*",
+          no.space = TRUE,
+          omit.stat=c("f", "ser"))
+

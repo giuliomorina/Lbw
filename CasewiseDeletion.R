@@ -13,9 +13,9 @@ source("MissingDataAnalysis.R")
 lbw_data_casewise = lbw_data[complete.cases(lbw_data),] #107 observations
 
 
-##########
-#IQ FULL
-##########
+###################################################################
+########################## IQ FULL ################################
+###################################################################
 
 #Linear regression
 lm_casewise_iqfull = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
@@ -54,9 +54,10 @@ lm_casewise_iqfull_LASSO = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -bw
                         data = lbw_data_casewise_LASSO_iqfull)
 summary(lm_casewise_iqfull_LASSO)
 
-##########
-#IQ VERB
-##########
+
+###################################################################
+########################## IQ VERB ################################
+###################################################################
 
 #Linear regression
 lm_casewise_iqverb = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
@@ -92,9 +93,9 @@ lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -to
 summary(lm_casewise_iqverb_LASSO)
 
 
-##########
-#IQ PERF
-##########
+###################################################################
+########################## IQ PERF ################################
+###################################################################
 
 #Linear regression
 lm_casewise_iqperf = lm(iqperf ~ . -iqverb -iqfull -rcomp -rrate -racc -tomifull -code,
@@ -127,9 +128,9 @@ lm_casewise_iqperf_LASSO = lm(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -to
 summary(lm_casewise_iqperf_LASSO)
 
 
-##########
-#TOMI FULL
-##########
+###################################################################
+########################## TOMIFULL ###############################
+###################################################################
 
 #Linear regression
 lm_casewise_tomifull = lm(tomifull ~ . -iqverb -iqfull -iqperf -rcomp -rrate -racc -code,
@@ -159,7 +160,9 @@ lm_casewise_tomi_LASSO = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -
 summary(lm_casewise_tomi_LASSO)
 
 
-############################ Tables for report ##############################
+###################################################################
+################### Tables for report #############################
+###################################################################
 
 # Table for liner regression with casewise delection
 stargazer(lm_casewise_iqfull, 
