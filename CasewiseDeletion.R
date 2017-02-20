@@ -21,7 +21,7 @@ lbw_data_casewise = lbw_data[complete.cases(lbw_data),] #107 observations
 lm_casewise_iqfull = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
                  data = lbw_data_casewise)
 summary(lm_casewise_iqfull)
-plot(lm_casewise_iqfull) #Everything OK :D
+#plot(lm_casewise_iqfull) #Everything OK :D
 
 #Lasso regression
 X <- model.matrix(as.formula(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code -1), data = lbw_data_casewise)
@@ -44,6 +44,15 @@ lambdaMin_fit_iqfull = as.matrix(coef(fit_iqfull, s=cvfit_iqfull$lambda.min))
 # plot(fit_subset,scale="Cp")
 # plot(fit_subset,scale="bic")
 
+#Linear regression with selected vars from LASSO
+mcig_new = lbw_data_casewise$mcig
+mcig_new[mcig_new != 1] = 2
+mcig_new = factor(mcig_new)
+
+lbw_data_casewise_LASSO_iqfull = cbind(lbw_data_casewise, mcig_new)
+lm_casewise_iqfull_LASSO = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -bw -tomifull -mcig -code,
+                        data = lbw_data_casewise_LASSO_iqfull)
+summary(lm_casewise_iqfull_LASSO)
 
 ##########
 #IQ VERB
@@ -55,14 +64,13 @@ lm_casewise_iqverb = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull
 summary(lm_casewise_iqverb)
 #plot(lm_casewise_iqverb) #Everything OK :D
 
-
 #Lasso regression
+X <- model.matrix(as.formula(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code -1), data = lbw_data_casewise)
+X <- subset(X, select=-sex1)
 Y <- as.matrix(lbw_data_casewise["iqverb"])
-fit_iqverb = glmnet(x=X, y=Y,
-             family="gaussian", alpha=1, nlambda = 100)
+fit_iqverb = glmnet(x=X, y=Y, family="gaussian", alpha=1, nlambda = 100)
 set.seed(17)
-cvfit_iqverb = cv.glmnet(x=X, y=Y,
-                  family="gaussian", alpha=1, lambda=fit_iqverb$lambda) 
+cvfit_iqverb = cv.glmnet(x=X, y=Y, family="gaussian", alpha=1, lambda=fit_iqverb$lambda) 
 plot(cvfit_iqverb)
 lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
 #coef(fit, s=cvfit$lambda.min)
@@ -78,6 +86,12 @@ lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
 # plot(fit_subset,scale="bic")
 # 
 
+#Linear regression with selected vars from LASSO
+lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -bw -code,
+                              data = lbw_data_casewise)
+summary(lm_casewise_iqverb_LASSO)
+
+
 ##########
 #IQ PERF
 ##########
@@ -88,8 +102,9 @@ lm_casewise_iqperf = lm(iqperf ~ . -iqverb -iqfull -rcomp -rrate -racc -tomifull
 summary(lm_casewise_iqperf)
 #plot(lm_casewise_iqperf) #Everything OK :D
 
-
 #Lasso regression
+X <- model.matrix(as.formula(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code -1), data = lbw_data_casewise)
+X <- subset(X, select=-sex1)
 Y <- as.matrix(lbw_data_casewise["iqperf"])
 fit_iqperf = glmnet(x=X, y=Y,
                     family="gaussian", alpha=1, nlambda = 100)
@@ -98,6 +113,18 @@ cvfit_iqperf = cv.glmnet(x=X, y=Y,
                          family="gaussian", alpha=1, lambda=fit_iqperf$lambda) 
 plot(cvfit_iqperf)
 lambdaMin_fit_iqperf = as.matrix(coef(fit_iqperf, s=cvfit_iqperf$lambda.min))
+
+
+
+#Linear regression with selected vars from LASSO
+socstat_new = lbw_data_casewise$socstat
+socstat_new[socstat_new != 4 & socstat_new != 5]= 1 #Now socstat is 1 if < 4 
+socstat_new = factor(socstat_new)
+
+lbw_data_casewise_LASSO_iqperf = cbind(lbw_data_casewise, socstat_new)
+lm_casewise_iqperf_LASSO = lm(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -ga -sex -mcig -socstat -code,
+                              data = lbw_data_casewise_LASSO_iqperf)
+summary(lm_casewise_iqperf_LASSO)
 
 
 ##########
@@ -112,6 +139,8 @@ summary(lm_casewise_tomifull)
 
 
 #Lasso regression
+X <- model.matrix(as.formula(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -code -1), data = lbw_data_casewise)
+X <- subset(X, select=-sex1)
 Y <- as.matrix(lbw_data_casewise["tomifull"])
 fit_tomi = glmnet(x=X, y=Y,
                     family="gaussian", alpha=1, nlambda = 100)
@@ -120,6 +149,14 @@ cvfit_tomi = cv.glmnet(x=X, y=Y,
                          family="gaussian", alpha=1, lambda=fit_tomi$lambda) 
 plot(cvfit_tomi)
 lambdaMin_fit_tomi = as.matrix(coef(fit_tomi, s=cvfit_tomi$lambda.min))
+
+
+#Linear regression with selected vars from LASSO
+
+lm_casewise_tomi_LASSO = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -rbw -ga -sex -educage
+                            -fed -benef -matage -mcig -socstat -code,
+                              data = lbw_data_casewise)
+summary(lm_casewise_tomi_LASSO)
 
 
 ############################ Tables for report ##############################
@@ -149,17 +186,33 @@ stargazer(lm_casewise_iqfull,
           no.space = TRUE,
           omit.stat=c("f", "ser"))
 
-lasso_results = cbind(lambdaMin_fit_iqfull, 
-                       lambdaMin_fit_iqverb, 
-                       lambdaMin_fit_iqperf, 
-                       lambdaMin_fit_tomi)
-stargazer(lasso_results)
+
 # Table for LASSO with casewise delection
+lasso_results = cbind(lambdaMin_fit_iqfull, 
+                      lambdaMin_fit_iqverb, 
+                      lambdaMin_fit_iqperf, 
+                      lambdaMin_fit_tomi)
 stargazer(lasso_results,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          covariate.labels = c("Intercept", "Birth weight", "Birth weight ratio", "Gestational age", 
+          ci = FALSE,
+          title = "LASSO with casewise delection",
+          single.row = FALSE, 
+          report = "vc*",
+          no.space = TRUE,
+          omit.stat=c("f", "ser"))
+
+
+# Table for liner regression with vars selected by LASSO
+stargazer(lm_casewise_iqfull_LASSO, 
+          lm_casewise_iqverb_LASSO, 
+          lm_casewise_iqperf_LASSO, 
+          lm_casewise_tomi_LASSO, 
+          type = "latex", 
+          dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
+          dep.var.caption = "",
+          covariate.labels = c("Birth weight ratio", "Birth weight", "Gestational age", 
                                "Sex", "Mother edu. <= 16", "Father edu. <= 16",
                                "2 social benefits", "3 social benefits",
                                "4 social benefits", "Mother age",
@@ -170,7 +223,7 @@ stargazer(lasso_results,
                                "Socio economic status 5",
                                "Intercept"),
           ci = FALSE,
-          title = "Linear regression with casewise delection",
+          title = "Linear regression with variables selected by LASSO",
           single.row = FALSE, 
           report = "vc*",
           no.space = TRUE,
