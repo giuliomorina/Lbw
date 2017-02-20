@@ -20,7 +20,7 @@ ini <- mice(lbw_data, maxit = 0)
 pred <- ini$predictorMatrix
 pred[, c("iqfull","iqverb","iqperf","rcomp","rrate","racc","tomifull","code")] <- 0
 #Specify that these variables should not be used to impute other values
-m <- 50
+m <- 500
 imp <- mice(lbw_data, seed = 17, method=c("","","","","","","","pmm","pmm","pmm","logreg",
                                           "logreg","logreg","pmm","pmm","polr","polr",""),
             predictorMatrix=pred, visitSequence = "monotone", m=m)
@@ -40,15 +40,8 @@ plot(imp, c("educage", "fed", "benef","mcig","socstat"))
 fit <- with(imp, lm(iqfull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat))
 summary(pool(fit))
 #Compute R^2
-coef <- pool(fit)$qbar
-X <- model.matrix(iqfull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat, data = lbw_data)
-Y <- lbw_data[complete.cases(lbw_data),"iqfull"] #remove all rows where there are missing data. Otherwise we can not compute R squared
-computeRsquared(coef,X,Y)
-# $R2
-# [1] 0.353818
-# 
-# $adj_R2
-# [1] 0.2216444
+pool.r.squared(fit, adjusted=FALSE) #0.2833940
+pool.r.squared(fit, adjusted=TRUE)  #0.1960677
 
 ##################
 #Subset selection
@@ -229,13 +222,9 @@ computeRsquared(coef2,X,Y)
 ############
 #LASSO
 ############
-rm(list=setdiff(ls(), c("imp")))
+rm(list=setdiff(ls(), c("imp","lbw_data")))
 
-formula_exp <- "iqfull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat-1"
-var_exp <- "iqfull"
-
-m <- 50
-set.seed(17)
+find_variables <- function(imp,formula_exp, var_exp, m) {
 all_varnames <- vector()
 for(i in 1:m) {
   dataset <- as.data.frame(data.matrix(complete(imp, action=i)))
@@ -251,8 +240,67 @@ for(i in 1:m) {
   colnames(X)[colnames(X)=="sex1"] <- "sex0" #Rename so it is consistent
   Y <- dataset[!is.na(dataset[var_exp]),var_exp]
   fit_lasso = glmnet(x=X, y=Y,family="gaussian", alpha=1, nlambda = 100)
-  cvfit = cv.glmnet(x=X, y=Y,family="gaussian", alpha=1, lambda=fit_lasso$lambda) 
+  cvfit = cv.glmnet(x=X, y=Y,family="gaussian", alpha=1, lambda=fit_lasso$lambda)
   coef_lasso <- data.matrix(coef(fit_lasso, s=cvfit$lambda.min))
   all_varnames <- c(all_varnames, rownames(coef_lasso)[which(coef_lasso!=0)])
 }
-table(all_varnames) 
+return(all_varnames)
+}
+
+set.seed(17)
+for (var_exp in c("iqfull","iqverb","iqperf","tomifull")) {
+  formula_exp <- paste(var_exp," ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat-1", sep = "")
+  all_varnames <- find_variables(imp,formula_exp, var_exp, m = 500)
+  print(var_exp)
+  print(table(all_varnames))
+}
+
+########
+#IQFULL
+#########
+#Create binary variable for the number of cigarettes (1 = none, 2= >0)
+lbw_data_iqfull <- lbw_data
+lbw_data_iqfull$mcig[lbw_data_iqfull$mcig != 1 & !is.na(lbw_data_iqfull$mcig)] = 2
+lbw_data_iqfull$mcig <- factor(lbw_data_iqfull$mcig)
+ini <- mice(lbw_data_iqfull, maxit = 0)
+pred <- ini$predictorMatrix
+pred[, c("iqfull","iqverb","iqperf","rcomp","rrate","racc","tomifull","code")] <- 0
+imp_iqfull <- mice(lbw_data_iqfull, seed = 17, method=c("","","","","","","","pmm","pmm","pmm","logreg",
+                                          "logreg","logreg","pmm","pmm","logreg","polr",""),
+            predictorMatrix=pred, visitSequence = "monotone", m=500)
+#Fit linear regression
+fit_iqfull <- with(imp_iqfull, lm(iqfull ~ bw+rbw+sex+educage+benef+mcig+socstat))
+summary(pool(fit_iqfull))
+#R^2
+pool.r.squared(fit_iqfull, adjusted=FALSE) #0.2697740
+pool.r.squared(fit_iqfull, adjusted=TRUE)  #0.2091387
+
+########
+#IQverb
+#########
+fit_iqverb <- with(imp, lm(iqverb ~ rbw+ga+sex+educage+fed+benef+matage+mcig+socstat))
+summary(pool(fit_iqverb))
+#Compute R^2
+pool.r.squared(fit_iqverb, adjusted=FALSE) #0.3148783
+pool.r.squared(fit_iqverb, adjusted=TRUE)  #0.2379170
+
+########
+#IQperf
+#########
+fit_iqperf <- with(imp, lm(iqperf ~ benef+bw+educage+rbw+socstat))
+summary(pool(fit_iqperf))
+#Compute R^2
+pool.r.squared(fit_iqperf, adjusted=FALSE) #0.1753846
+pool.r.squared(fit_iqperf, adjusted=TRUE)  #0.1190427
+
+########
+#tomifull
+#########
+fit_tomifull <- with(imp, lm(tomifull ~ bw+ga)) 
+summary(pool(fit_tomifull))
+#Compute R^2
+pool.r.squared(fit_tomifull, adjusted=FALSE) #0.03575897
+pool.r.squared(fit_tomifull, adjusted=TRUE)  #0.02448129
+#note that bw and ga are never missing -> it is the same as a liner regression
+fit_tomifull_classic <- lm(tomifull ~ bw+ga, data=lbw_data)
+summary(fit_tomifull_classic) #Ok, same results :)
