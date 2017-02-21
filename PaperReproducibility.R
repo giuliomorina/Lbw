@@ -25,8 +25,8 @@ levels(paper_data$fed) <- c(levels(paper_data$fed),3)
 paper_data$fed[is.na(paper_data$fed)] = 3
 levels(paper_data$mcig) <- c(levels(paper_data$mcig),5) #change to assign 5 to missing mcig NA values
 paper_data$mcig[is.na(paper_data$mcig)] = 5
-levels(paper_data$socstat) <- c(levels(paper_data$socstat),3) 
-paper_data$socstat[is.na(paper_data$socstat)] = 3
+levels(paper_data$socstat) <- c(levels(paper_data$socstat),6) 
+paper_data$socstat[is.na(paper_data$socstat)] = 6
 
 
 ###################################################################
@@ -70,7 +70,7 @@ lambdaMin_fit_iqfull = as.matrix(coef(fit_iqfull, s=cvfit_iqfull$lambda.min))
 
 #Linear regression with selected vars from LASSO
 socstat_new = paper_data_iqfull$socstat
-socstat_new[socstat_new != 4 & socstat_new != 5]= 1 #Now socstat is 1 if < 4 and 4 or 5 
+socstat_new[socstat_new != 4 & socstat_new != 5 & socstat_new != 6]= 1 #Now socstat is 1 if < 4 and 4 or 5 
 socstat_new = factor(socstat_new)
 
 fed_new = paper_data_iqfull$fed
@@ -106,7 +106,7 @@ fit_subset_iqverb_summary = summary(fit_subset_iqverb)
 
 fit_subset_iqverb_summary$cp
 plot(fit_subset_iqverb,scale="Cp")
-lm_subset_iqverb = lm(iqverb ~ rbw+ga+educage+benef+matage,
+lm_subset_iqverb = lm(iqverb ~ rbw+ga+sex+educage+benef+matage,
                data = paper_data_iqverb)
 summary(lm_subset_iqverb)
 
@@ -127,7 +127,12 @@ lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
 
 
 #Linear regression with selected vars from LASSO
-lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -ga -fed -mcig -code,
+fed_new = paper_data_iqverb$fed
+fed_new[fed_new != 3]= 2 #Now fed is 2 if non missing and 3 if missing 
+fed_new = factor(fed_new)
+
+lbw_data_casewise_LASSO_iqverb = cbind(paper_data_iqverb, fed_new)
+lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -bw -fed -code,
                               data = paper_data_iqverb)
 summary(lm_casewise_iqverb_LASSO)
 
@@ -175,7 +180,7 @@ fed_new[fed_new != 3]= 2 #Now fed is 2 if non missing and 3 if missing
 fed_new = factor(fed_new)
 
 socstat_new = paper_data_iqperf$socstat
-socstat_new[socstat_new != 4 & socstat_new != 5]= 1 #Now socstat is 1 if < 4, and 4 or 5 
+socstat_new[socstat_new != 4 & socstat_new != 5 & socstat_new != 6]= 1 #Now socstat is 1 if < 4, and 4 or 5 or NA 
 socstat_new = factor(socstat_new)
 
 lbw_data_casewise_LASSO_iqperf = cbind(paper_data_iqperf, fed_new, socstat_new)
@@ -205,7 +210,7 @@ fit_subset_tomifull_summary = summary(fit_subset_tomifull)
 
 fit_subset_tomifull_summary$cp
 plot(fit_subset_tomifull,scale="Cp")
-lm_subset_tomifull = lm(tomifull ~ bw+rbw+ga+educage+benef+mcig, #only educage missing and benef missing are included
+lm_subset_tomifull = lm(tomifull ~ bw+rbw+ga+educage+benef, #only educage missing and benef missing are included
                       data = paper_data_tomifull)
 summary(lm_subset_tomifull)
 
@@ -256,17 +261,17 @@ stargazer(lm_casewise_iqfull,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
-                               "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
-                               "Father edu. NA", "Social benefit > 1", "Social benefits NA",
-                               "4 social benefits", "Mother age",
-                               "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-                               "Socio economic status 2",
-                               "Socio economic status 3",
-                               "Socio economic status 4",
-                               "Socio economic status 5"),
+          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
+          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+          #                     "4 social benefits", "Mother age",
+          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+          #                     "Socio economic status 2",
+          #                     "Socio economic status 3",
+          #                     "Socio economic status 4",
+          #                     "Socio economic status 5"),
           ci = FALSE,
-          title = "Linear regression with NA indicators",
+          title = "Linear regression with NA indicators (casewise delection)",
           single.row = FALSE, 
           report = "vc*",
           no.space = TRUE,
@@ -281,17 +286,17 @@ stargazer(lm_subset_iqfull,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
-                               "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
-                               "Father edu. NA", "Social benefit > 1", "Social benefits NA",
-                               "4 social benefits", "Mother age",
-                               "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-                               "Socio economic status 2",
-                               "Socio economic status 3",
-                               "Socio economic status 4",
-                               "Socio economic status 5"),
+          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
+          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+          #                     "4 social benefits", "Mother age",
+          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+          #                     "Socio economic status 2",
+          #                     "Socio economic status 3",
+          #                     "Socio economic status 4",
+          #                     "Socio economic status 5"),
           ci = FALSE,
-          title = "Linear regression with subset selection and NA indicators",
+          title = "Linear regression with subset selection and NA indicators (casewise delection)",
           single.row = FALSE, 
           report = "vc*",
           no.space = TRUE,
@@ -299,20 +304,20 @@ stargazer(lm_subset_iqfull,
 
 
 # Table for LASSO with NA indicators
-lasso_results = cbind(lambdaMin_fit_iqfull, 
-                      lambdaMin_fit_iqverb, 
-                      lambdaMin_fit_iqperf, 
-                      lambdaMin_fit_tomi)
-stargazer(lasso_results,
-          type = "latex", 
-          dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
-          dep.var.caption = "",
-          ci = FALSE,
-          title = "LASSO with NA indicators",
-          single.row = FALSE, 
-          report = "vc*",
-          no.space = TRUE,
-          omit.stat=c("f", "ser"))
+# lasso_results = cbind(lambdaMin_fit_iqfull, 
+#                       lambdaMin_fit_iqverb, 
+#                       lambdaMin_fit_iqperf, 
+#                       lambdaMin_fit_tomi)
+# stargazer(lasso_results,
+#           type = "latex", 
+#           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
+#           dep.var.caption = "",
+#           ci = FALSE,
+#           title = "LASSO with NA indicators",
+#           single.row = FALSE, 
+#           report = "vc*",
+#           no.space = TRUE,
+#           omit.stat=c("f", "ser"))
 
 
 # Table for liner regression with vars selected by LASSO
@@ -323,18 +328,17 @@ stargazer(lm_casewise_iqfull_LASSO,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          covariate.labels = c("Birth weight ratio", "Birth weight", "Gestational age", 
-                               "Sex", "Mother edu. <= 16", "Father edu. <= 16",
-                               "2 social benefits", "3 social benefits",
-                               "4 social benefits", "Mother age",
-                               "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-                               "Socio economic status 2",
-                               "Socio economic status 3",
-                               "Socio economic status 4",
-                               "Socio economic status 5",
-                               "Intercept"),
+          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
+          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+          #                     "4 social benefits", "Mother age",
+          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+          #                     "Socio economic status 2",
+          #                     "Socio economic status 3",
+          #                     "Socio economic status 4",
+          #                     "Socio economic status 5"),
           ci = FALSE,
-          title = "Linear regression with NA indicator variables selected by LASSO",
+          title = "Linear regression with NA indicator variables selected by LASSO (casewise delection)",
           single.row = FALSE, 
           report = "vc*",
           no.space = TRUE,
