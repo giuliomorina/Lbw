@@ -43,6 +43,17 @@ summary(pool(fit))
 pool.r.squared(fit, adjusted=FALSE) #0.2833940
 pool.r.squared(fit, adjusted=TRUE)  #0.1960677
 
+###################
+# Ordinal logit ##
+##################
+lbw_data_ordered <- lbw_data
+lbw_data_ordered$tomifull <- ordered(floor(lbw_data_ordered$tomifull)) #Remove .5 and floor them
+imp2 <- mice(lbw_data_ordered, seed = 17, method=c("","","","","","","","pmm","pmm","pmm","logreg",
+                                          "logreg","logreg","pmm","pmm","polr","polr",""),
+            predictorMatrix=pred, visitSequence = "monotone", m=m)
+fit_ordered <- with(imp2, polr(tomifull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat, Hess=TRUE))
+summary(pool(fit_ordered))
+
 ##################
 #Subset selection
 ##################
