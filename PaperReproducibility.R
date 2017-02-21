@@ -8,6 +8,7 @@ library(glmnet)
 library(leaps)
 library(xtable)
 library(stargazer)
+library(ggfortify)
 source("MissingDataAnalysis.R")
 
 paper_data = lbw_data #initialization
@@ -41,6 +42,9 @@ paper_data_iqfull <- paper_data[!is.na(paper_data$iqfull),]
 lm_casewise_iqfull = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
                  data = paper_data_iqfull)
 summary(lm_casewise_iqfull)
+plot(lm_casewise_iqfull)
+autoplot(lm_casewise_iqfull, label.size = 3)
+
 
 #Best subset
 fit_subset_iqfull = regsubsets(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
@@ -98,6 +102,8 @@ paper_data_iqverb <- paper_data[!is.na(paper_data$iqverb),]
 lm_casewise_iqverb = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
                         data = paper_data_iqverb)
 summary(lm_casewise_iqverb)
+autoplot(lm_casewise_iqverb, label.size = 3)
+
 
 #Best subset
 fit_subset_iqverb = regsubsets(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
@@ -149,6 +155,7 @@ paper_data_iqperf <- paper_data[!is.na(paper_data$iqperf),]
 lm_casewise_iqperf = lm(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
                         data = paper_data_iqperf)
 summary(lm_casewise_iqperf)
+autoplot(lm_casewise_iqperf, label.size = 3)
 
 #Best subset
 fit_subset_iqperf = regsubsets(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
@@ -197,11 +204,14 @@ summary(lm_casewise_iqperf_LASSO)
 #Remove rows where iqfull is missing
 paper_data_tomifull = paper_data[!is.na(paper_data$tomifull),]
 
+ggplot(paper_data_tomifull, aes(x=tomifull)) +  geom_histogram(binwidth=1, colour="black", fill="grey") +
+  xlab("TOMI") + ylab("Count") + ggtitle("Distribution of TOMI")
 
 #Linear regression (check if it works)
 lm_casewise_tomifull = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -code,
                         data = paper_data_tomifull)
 summary(lm_casewise_tomifull)
+autoplot(lm_casewise_tomifull, label.size = 3)
 
 #Best subset
 fit_subset_tomifull = regsubsets(tomifull ~ . -iqfull -iqverb -rcomp -rrate -racc -iqperf -code,
