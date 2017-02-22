@@ -39,7 +39,7 @@ paper_data$socstat[is.na(paper_data$socstat)] = 6
 paper_data_iqfull <- paper_data[!is.na(paper_data$iqfull),]
 
 #Linear regression (check if it works)
-lm_casewise_iqfull = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
+lm_casewise_iqfull = lm(iqfull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                  data = paper_data_iqfull)
 summary(lm_casewise_iqfull)
 plot(lm_casewise_iqfull)
@@ -47,7 +47,7 @@ autoplot(lm_casewise_iqfull, label.size = 3)
 
 
 #Best subset
-fit_subset_iqfull = regsubsets(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -code,
+fit_subset_iqfull = regsubsets(iqfull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                         data = paper_data_iqfull, method = "exhaustive", nvmax = 20)
 fit_subset_iqfull_summary = summary(fit_subset_iqfull)
 
@@ -69,7 +69,7 @@ set.seed(17)
 cvfit_iqfull = cv.glmnet(x=X, y=Y,family="gaussian", alpha=1, lambda=fit_iqfull$lambda) 
 plot(cvfit_iqfull)
 lambdaMin_fit_iqfull = as.matrix(coef(fit_iqfull, s=cvfit_iqfull$lambda.min))
-#coef(fit, s=cvfit$lambda.min)
+coef(fit_iqfull, s=cvfit_iqfull$lambda.min)
 #coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
 
 #Linear regression with selected vars from LASSO
@@ -86,7 +86,7 @@ mcig_new[mcig_new != 5]= 1 #Now mcig is 1 if non missing and 5 if missing
 mcig_new = factor(mcig_new)
 
 lbw_data_casewise_LASSO_iqfull = cbind(paper_data_iqfull, socstat_new, fed_new, mcig_new)
-lm_casewise_iqfull_LASSO = lm(iqfull ~ . -iqverb -iqperf -rcomp -rrate -racc -tomifull -ga -fed -matage -mcig -socstat -code,
+lm_casewise_iqfull_LASSO = lm(iqfull ~ bw+rbw++sex+educage+fed_new+benef+mcig_new+socstat_new,
                               data = lbw_data_casewise_LASSO_iqfull)
 summary(lm_casewise_iqfull_LASSO)
 
@@ -99,14 +99,14 @@ summary(lm_casewise_iqfull_LASSO)
 paper_data_iqverb <- paper_data[!is.na(paper_data$iqverb),]
 
 #Linear regression (check if it works)
-lm_casewise_iqverb = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
+lm_casewise_iqverb = lm(iqverb ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                         data = paper_data_iqverb)
 summary(lm_casewise_iqverb)
 autoplot(lm_casewise_iqverb, label.size = 3)
 
 
 #Best subset
-fit_subset_iqverb = regsubsets(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -code,
+fit_subset_iqverb = regsubsets(iqverb ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                         data = paper_data_iqverb, method = "exhaustive", nvmax = 20)
 fit_subset_iqverb_summary = summary(fit_subset_iqverb)
 
@@ -128,7 +128,7 @@ set.seed(17)
 cvfit_iqverb = cv.glmnet(x=X, y=Y, family="gaussian", alpha=1, lambda=fit_iqverb$lambda) 
 plot(cvfit_iqverb)
 lambdaMin_fit_iqverb = as.matrix(coef(fit_iqverb, s=cvfit_iqverb$lambda.min))
-#coef(fit, s=cvfit$lambda.min)
+coef(fit_iqverb, s=cvfit_iqverb$lambda.min)
 #coef(fit, s=1) #lambda.lse = 1 but for some reasons it is null if I call it directly...
 
 
@@ -138,7 +138,7 @@ fed_new[fed_new != 3]= 2 #Now fed is 2 if non missing and 3 if missing
 fed_new = factor(fed_new)
 
 lbw_data_casewise_LASSO_iqverb = cbind(paper_data_iqverb, fed_new)
-lm_casewise_iqverb_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull -bw -fed -code,
+lm_casewise_iqverb_LASSO = lm(iqverb ~ rbw+ga+sex+educage+fed_new+benef+matage+mcig+socstat,
                               data = paper_data_iqverb)
 summary(lm_casewise_iqverb_LASSO)
 
@@ -152,13 +152,13 @@ paper_data_iqperf <- paper_data[!is.na(paper_data$iqperf),]
 
 
 #Linear regression (check if it works)
-lm_casewise_iqperf = lm(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
+lm_casewise_iqperf = lm(iqperf ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                         data = paper_data_iqperf)
 summary(lm_casewise_iqperf)
 autoplot(lm_casewise_iqperf, label.size = 3)
 
 #Best subset
-fit_subset_iqperf = regsubsets(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code,
+fit_subset_iqperf = regsubsets(iqperf ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                                data = paper_data_iqperf, method = "exhaustive", nvmax = 20)
 fit_subset_iqperf_summary = summary(fit_subset_iqperf)
 
@@ -169,7 +169,7 @@ lm_subset_iqperf = lm(iqperf ~ rbw+educage+benef,
 summary(lm_subset_iqperf)
 
 #Lasso regression
-X <- model.matrix(as.formula(iqperf ~ . -iqfull -iqverb -rcomp -rrate -racc -tomifull -code -1), data = paper_data_iqperf)
+X <- model.matrix(as.formula(iqperf ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat-1), data = paper_data_iqperf)
 X <- subset(X, select=-sex1)
 Y <- as.matrix(paper_data_iqperf["iqperf"])
 fit_iqperf = glmnet(x=X, y=Y,
@@ -179,7 +179,7 @@ cvfit_iqperf = cv.glmnet(x=X, y=Y,
                          family="gaussian", alpha=1, lambda=fit_iqperf$lambda) 
 plot(cvfit_iqperf)
 lambdaMin_fit_iqperf = as.matrix(coef(fit_iqperf, s=cvfit_iqperf$lambda.min))
-
+coef(fit_iqperf, s=cvfit_iqperf$lambda.min)
 
 #Linear regression with selected vars from LASSO
 fed_new = paper_data_iqperf$fed
@@ -191,8 +191,7 @@ socstat_new[socstat_new != 4 & socstat_new != 5 & socstat_new != 6]= 1 #Now socs
 socstat_new = factor(socstat_new)
 
 lbw_data_casewise_LASSO_iqperf = cbind(paper_data_iqperf, fed_new, socstat_new)
-lm_casewise_iqperf_LASSO = lm(iqverb ~ . -iqfull -iqperf -rcomp -rrate -racc -tomifull 
-                              -ga -sex -fed -matage -mcig -socstat -code,
+lm_casewise_iqperf_LASSO = lm(iqverb ~ bw+rbw+educage+fed_new+benef+socstat_new,
                               data = lbw_data_casewise_LASSO_iqperf)
 summary(lm_casewise_iqperf_LASSO)
 
@@ -208,13 +207,13 @@ ggplot(paper_data_tomifull, aes(x=tomifull)) +  geom_histogram(binwidth=1, colou
   xlab("TOMI") + ylab("Count") + ggtitle("Distribution of TOMI")
 
 #Linear regression (check if it works)
-lm_casewise_tomifull = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc -code,
+lm_casewise_tomifull = lm(tomifull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                         data = paper_data_tomifull)
 summary(lm_casewise_tomifull)
 autoplot(lm_casewise_tomifull, label.size = 3)
 
 #Best subset
-fit_subset_tomifull = regsubsets(tomifull ~ . -iqfull -iqverb -rcomp -rrate -racc -iqperf -code,
+fit_subset_tomifull = regsubsets(tomifull ~ bw+rbw+ga+sex+educage+fed+benef+matage+mcig+socstat,
                                data = paper_data_tomifull, method = "exhaustive", nvmax = 20)
 fit_subset_tomifull_summary = summary(fit_subset_tomifull)
 
@@ -238,7 +237,7 @@ cvfit_tomi = cv.glmnet(x=X, y=Y,
                        family="gaussian", alpha=1, lambda=fit_tomi$lambda) 
 plot(cvfit_tomi)
 lambdaMin_fit_tomi = as.matrix(coef(fit_tomi, s=cvfit_tomi$lambda.min))
-
+coef(fit_tomi, s=cvfit_tomi$lambda.min)
 
 #Linear regression with selected vars from LASSO
 fed_new = paper_data_tomifull$fed
@@ -254,8 +253,7 @@ benef_new[benef_new!= 3]= 2 #Now benef is 2 if non missing and 3 if missing
 benef_new = factor(benef_new)
 
 lbw_data_casewise_LASSO_tomifull = cbind(paper_data_tomifull, fed_new, educage_new, benef_new)
-lm_casewise_tomifull_LASSO = lm(tomifull ~ . -iqfull -iqverb -iqperf -rcomp -rrate -racc 
-                              -rbw -ga -sex -educage -fed -benef -matage -mcig -socstat -code,
+lm_casewise_tomifull_LASSO = lm(tomifull ~ bw+educage_new+fed_new+benef_new,
                               data = lbw_data_casewise_LASSO_tomifull)
 summary(lm_casewise_tomifull_LASSO)
 
@@ -271,17 +269,18 @@ stargazer(lm_casewise_iqfull,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
-          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
-          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
-          #                     "4 social benefits", "Mother age",
-          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-          #                     "Socio economic status 2",
-          #                     "Socio economic status 3",
-          #                     "Socio economic status 4",
-          #                     "Socio economic status 5"),
+          covariate.labels = c("Birth weight", "Birth weight ratio", "Gestational age",
+                              "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+                              "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+                              "4 social benefits", "Mother age",
+                              "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+                              "Socio economic status 2",
+                              "Socio economic status 3",
+                              "Socio economic status 4",
+                              "Socio economic status 5",
+                              "Socio economic status 6","Intercept"),
           ci = FALSE,
-          title = "Linear regression with NA indicators (casewise delection)",
+          title = "Linear regression with NA indicators",
           single.row = FALSE, 
           report = "vc*",
           no.space = TRUE,
@@ -296,15 +295,15 @@ stargazer(lm_subset_iqfull,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
-          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
-          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
-          #                     "4 social benefits", "Mother age",
-          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-          #                     "Socio economic status 2",
-          #                     "Socio economic status 3",
-          #                     "Socio economic status 4",
-          #                     "Socio economic status 5"),
+          covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age",
+                              "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+                              "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+                              "4 social benefits", "Mother age",
+                              "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+                              "Socio economic status 2",
+                              "Socio economic status 3",
+                              "Socio economic status 4",
+                              "Socio economic status 5"),
           ci = FALSE,
           title = "Linear regression with subset selection and NA indicators (casewise delection)",
           single.row = FALSE, 
@@ -338,15 +337,15 @@ stargazer(lm_casewise_iqfull_LASSO,
           type = "latex", 
           dep.var.labels  = c("Full IQ", "Verbal IQ", "Performance IQ", "TOMI"),
           dep.var.caption = "",
-          #covariate.labels = c("Intercept","Birth weight", "Birth weight ratio", "Gestational age", 
-          #                     "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
-          #                     "Father edu. NA", "Social benefit > 1", "Social benefits NA",
-          #                     "4 social benefits", "Mother age",
-          #                     "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
-          #                     "Socio economic status 2",
-          #                     "Socio economic status 3",
-          #                     "Socio economic status 4",
-          #                     "Socio economic status 5"),
+          covariate.labels = c("Birth weight", "Birth weight ratio", "Gestational age",
+                              "Sex", "Mother edu. <= 16","Mother edu. NA", "Father edu. <= 16",
+                              "Father edu. NA", "Social benefit > 1", "Social benefits NA",
+                              "4 social benefits", "Mother age",
+                              "Cig. < 10", "Cig. 10-19", "Cig. >= 20",
+                              "Socio economic status 2",
+                              "Socio economic status 3",
+                              "Socio economic status 4",
+                              "Socio economic status 5","Intercept"),
           ci = FALSE,
           title = "Linear regression with NA indicator variables selected by LASSO (casewise delection)",
           single.row = FALSE, 
