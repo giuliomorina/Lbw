@@ -5,14 +5,14 @@ library("mice")
 library("Hmisc")
 library("hot.deck")
 library("BaylorEdPsych")
-
+library("fBasics")
+library("pastecs")
 ############################ Import the 3 datasets #################################
 
 #setwd("C://Users//Utente 2//Documents//GitHub//Lbw")
 lbw_data = read.csv("oxwaspLbw.csv")
 bp_data = read.csv("oxwaspbp.csv", sep=" ")
 GCSE_data = read.csv("oxwaspGCSE.csv")
-
 
 ##################### Clean and prepare lbw_data for analysis #######################
 
@@ -72,8 +72,6 @@ total_data = data_1_3
 # Summary of lbw dataset
 attach(lbw_data)
 
-summary(lbw_data)
-
 hist(iqfull)
 hist(rcomp)
 hist(rrate)
@@ -110,7 +108,8 @@ lbw_data[is.na(lbw_data$mcig),20] == lbw_data[is.na(lbw_data$educage),20]
 ######################## Missing data plots (lbw data) with VIM #####################
 
 # Missing data pattern
-lbw_aggr = aggr(lbw_data, col=mdc(1:2), numbers=TRUE, prop = FALSE, sortVars=TRUE, labels=names(lbw_data), cex.axis=.7, gap=3, ylab=c("Frequency of missingness","Missingness Pattern"))
+lbw_data_toplot = lbw_data[,c(-4,-5,-6,-18)] 
+lbw_aggr = aggr(lbw_data_toplot, numbers=TRUE, prop = FALSE, sortVars=TRUE, labels=names(lbw_data), cex.axis=.7, gap=3, ylab=c("Frequency of missingness","Missingness Pattern"))
 
 # Margin plot (scatter plot + box plots)
 
@@ -150,3 +149,43 @@ pairs(lbw_data[,c(-2,-3,-4,-5,-6,-7)])
 LittleMCAR(lbw_data) 
 
 
+################################ Table for the report ###################################
+attach(lbw_data)
+dataToDescribe<-cbind(iqfull, iqverb, iqperf, tomifull, bw, rbw, ga, educage, fed, benef, matage, mcig, socstat)
+stat.desc(dataToDescribe)
+options(scipen=100)
+options(digits=2)
+stat.desc(dataToDescribe)
+totable = t(as.matrix(stat.desc(dataToDescribe)))
+totable = totable[,c(3,4,5,8,9,13)]
+totable = totable[, c(2,3,4,5,6,1)]
+colnames(totable) = c("Minimum", "Maximum", "Median", "Mean", "Standard deviation", "NA values")
+stargazer::stargazer(totable,title = "Dataset summary")
+
+educageFreq = as.matrix(table(educage))
+colnames(educageFreq) = c("Mother education")
+fedFreq = as.matrix(table(fed))
+colnames(fedFreq) = c("Father education")
+
+sexFreq = as.matrix(table(sex))
+colnames(sexFreq) = c("Sex")
+
+benefFreq = as.matrix(table(benef))
+colnames(benefFreq) = c("Social benefit")
+
+CigFreq = as.matrix(table(mcig))
+colnames(CigFreq) = c("Cig.")
+
+socstatFreq = as.matrix(table(socstat))
+colnames(socstatFreq) = c("Socio economic status")
+
+n <- max(length(sexFreq), length(educageFreq), length(fedFreq), length(benefFreq), length(CigFreq), length(socstatFreq))
+
+length(sexFreq) = n
+length(educageFreq)= n
+length(fedFreq)= n
+length(benefFreq)= n
+length(CigFreq)= n
+length(socstatFreq)= n
+
+totable2 = t(cbind(sexFreq, educageFreq, fedFreq, benefFreq, CigFreq, socstatFreq))
